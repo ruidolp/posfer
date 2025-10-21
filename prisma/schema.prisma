@@ -1,0 +1,319 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// TENANT (Negocio)
+// ============================================
+model Tenant {
+  id                String   @id @default(uuid())
+  business_name     String
+  phone             String   @unique
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  
+  // Configuración
+  currency          String   @default("CLP")
+  theme             String   @default("high_contrast")
+  
+  // Relaciones
+  users             User[]
+  products          Product[]
+  sales             Sale[]
+  purchases         Purchase[]
+  providers         Provider[]
+  locations         Location[]
+  cash_registers    CashRegister[]
+  
+  @@index([phone])
+}
+
+// ============================================
+// USER (Usuario) - Login por TELÉFONO
+// ============================================
+model User {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  phone        String   @unique  // ⭐ IDENTIFICADOR ÚNICO
+  email        String?              // OPCIONAL
+  password     String
+  name         String
+  role         String   @default("owner") // owner, assistant
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relaciones
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sales        Sale[]
+  cash_registers CashRegister[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([phone])
+}
+
+// ============================================
+// PRODUCT (Producto) - PARTICIONADO
+// ============================================
+model Product {
+  id           String   @id @default(uuid())
+  tenant_id    String   // Para particionamiento
+  name         String
+  price        Decimal  @db.Decimal(10, 2)
+  unit_type    String?  // "kg", "unidad", "caja", etc
+  stock        Int?     // OPCIONAL - null = no controla stock
+  alert_stock  Int?     // Stock mínimo para alertas
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relaciones
+  tenant       Tenant      @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sale_items   SaleItem[]
+  purchase_items PurchaseItem[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+}
+
+// ============================================
+// PROVIDER (Proveedor)
+// ============================================
+model Provider {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  name         String
+  phone        String?
+  email        String?
+  address      String?
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relaciones
+  tenant       Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  purchases    Purchase[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+}
+
+// ============================================
+// LOCATION (Ubicación/Feria)
+// ============================================
+model Location {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  name         String   // "Feria Lo Valledor", "Puesto 45"
+  address      String?
+  active       Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  // Relaciones
+  tenant       Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sales        Sale[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, active])
+}
+
+// ============================================
+// CASH_REGISTER (Caja)
+// ============================================
+model CashRegister {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  location_id     String?
+  
+  opening_amount  Decimal  @db.Decimal(10, 2)
+  closing_amount  Decimal? @db.Decimal(10, 2)
+  
+  opened_at       DateTime @default(now())
+  closed_at       DateTime?
+  
+  status          String   @default("open") // open, closed
+  
+  notes           String?
+  
+  // Relaciones
+  tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [user_id], references: [id])
+  sales           Sale[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, status])
+  @@index([user_id])
+}
+
+// ============================================
+// SALE (Venta) - PARTICIONADO
+// ============================================
+model Sale {
+  id                String   @id @default(uuid())
+  tenant_id         String
+  user_id           String
+  cash_register_id  String?
+  location_id       String?
+  
+  total             Decimal  @db.Decimal(10, 2)
+  
+  sale_date         DateTime @default(now())
+  
+  // Para sincronización offline
+  synced            Boolean  @default(false)
+  local_id          String?  // ID generado localmente antes de sincronizar
+  
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  
+  // Relaciones
+  tenant            Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user              User          @relation(fields: [user_id], references: [id])
+  cash_register     CashRegister? @relation(fields: [cash_register_id], references: [id])
+  location          Location?     @relation(fields: [location_id], references: [id])
+  items             SaleItem[]
+  payments          Payment[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, sale_date])
+  @@index([user_id])
+  @@index([cash_register_id])
+  @@index([synced])
+}
+
+// ============================================
+// SALE_ITEM (Item de Venta)
+// ============================================
+model SaleItem {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  sale_id      String
+  product_id   String
+  
+  quantity     Decimal  @db.Decimal(10, 3)
+  unit_price   Decimal  @db.Decimal(10, 2)
+  subtotal     Decimal  @db.Decimal(10, 2)
+  
+  // Relaciones
+  sale         Sale     @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  product      Product  @relation(fields: [product_id], references: [id])
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([sale_id])
+  @@index([product_id])
+}
+
+// ============================================
+// PAYMENT (Pago)
+// ============================================
+model Payment {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  sale_id         String
+  
+  payment_method  String   // "cash", "transfer", "debit", "credit"
+  amount          Decimal  @db.Decimal(10, 2)
+  
+  reference       String?  // Número de transferencia, voucher, etc
+  
+  created_at      DateTime @default(now())
+  
+  // Relaciones
+  sale            Sale     @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([sale_id])
+}
+
+// ============================================
+// PURCHASE (Compra a Proveedor)
+// ============================================
+model Purchase {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  provider_id     String?
+  
+  total           Decimal  @db.Decimal(10, 2)
+  purchase_date   DateTime @default(now())
+  
+  notes           String?
+  
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  // Relaciones
+  tenant          Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  provider        Provider?      @relation(fields: [provider_id], references: [id])
+  items           PurchaseItem[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([tenant_id, purchase_date])
+  @@index([provider_id])
+}
+
+// ============================================
+// PURCHASE_ITEM (Item de Compra)
+// ============================================
+model PurchaseItem {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  purchase_id     String
+  product_id      String?
+  
+  description     String   // Por si no está en productos
+  quantity        Decimal  @db.Decimal(10, 3)
+  unit_price      Decimal  @db.Decimal(10, 2)
+  subtotal        Decimal  @db.Decimal(10, 2)
+  
+  update_stock    Boolean  @default(false) // Si actualiza inventario
+  
+  // Relaciones
+  purchase        Purchase @relation(fields: [purchase_id], references: [id], onDelete: Cascade)
+  product         Product? @relation(fields: [product_id], references: [id])
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([purchase_id])
+  @@index([product_id])
+}
+
+// ============================================
+// SYNC_QUEUE (Cola de Sincronización Offline)
+// ============================================
+model SyncQueue {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  
+  operation_type  String   // "sale", "purchase", "product_update"
+  operation_data  Json     // Datos de la operación
+  
+  status          String   @default("pending") // pending, synced, error
+  error_message   String?
+  
+  attempts        Int      @default(0)
+  
+  created_at      DateTime @default(now())
+  synced_at       DateTime?
+  
+  @@index([tenant_id])
+  @@index([status])
+  @@index([created_at])
+}
