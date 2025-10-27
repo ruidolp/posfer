@@ -13,11 +13,11 @@ const locationSchema = z.object({
 // GET - Obtener una ubicación
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params; // ⭐ CAMBIO: await params
 
     const location = await prisma.location.findFirst({
       where: {
@@ -57,11 +57,11 @@ export async function GET(
 // PUT - Actualizar ubicación
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params; // ⭐ CAMBIO: await params
     const body = await request.json();
     
     // Validar datos
@@ -128,11 +128,11 @@ export async function PUT(
 // DELETE - Eliminar (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params; // ⭐ CAMBIO: await params
 
     // Verificar que la ubicación existe y pertenece al tenant
     const existingLocation = await prisma.location.findFirst({

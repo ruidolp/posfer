@@ -15,11 +15,11 @@ const providerSchema = z.object({
 // GET - Obtener un proveedor
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params;
 
     const provider = await prisma.provider.findFirst({
       where: {
@@ -59,11 +59,11 @@ export async function GET(
 // PUT - Actualizar proveedor
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params;
     const body = await request.json();
     
     // Validar datos
@@ -132,11 +132,11 @@ export async function PUT(
 // DELETE - Eliminar (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const payload = await requireAuth();
-    const id = params.id;
+    const { id } = await params;
 
     // Verificar que el proveedor existe y pertenece al tenant
     const existingProvider = await prisma.provider.findFirst({
