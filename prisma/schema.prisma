@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+// prisma/schema.prisma - VERSIÓN CORREGIDA Y LIMPIA
 
 generator client {
   provider = "prisma-client-js"
@@ -19,34 +19,32 @@ model Tenant {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
   
-  // Configuración
   currency          String   @default("CLP")
   theme             String   @default("high_contrast")
-  
-  // Límites del plan (cache)
   plan_limits       Json?
   
-  // Relaciones
   users             User[]
-  products          Product[]
+  product_parents   ProductParent[]
+  product_varieties ProductVariety[]
   sales             Sale[]
   purchases         Purchase[]
-  providers         Provider[]
+  suppliers         Supplier[]
   locations         Location[]
   cash_registers    CashRegister[]
   subscription      Subscription?
+  product_daily_sales ProductDailySales[]
   
   @@index([phone])
 }
 
 // ============================================
-// SUBSCRIPTION PLAN (Planes)
+// SUBSCRIPTION PLAN
 // ============================================
 model SubscriptionPlan {
   id            String   @id @default(uuid())
-  name          String   // "Free", "Pro", "Enterprise"
+  name          String
   price         Decimal  @db.Decimal(10, 2)
-  features      Json     // Límites y features del plan
+  features      Json
   active        Boolean  @default(true)
   created_at    DateTime @default(now())
   
@@ -56,52 +54,34 @@ model SubscriptionPlan {
 }
 
 // ============================================
-// SUBSCRIPTION (Suscripción activa)
+// SUBSCRIPTION
 // ============================================
 model Subscription {
   id                      String   @id @default(uuid())
   tenant_id               String   @unique
   plan_id                 String
-  status                  String   @default("active") // active, cancelled, expired
+  status                  String   @default("active")
   
   current_period_start    DateTime
   current_period_end      DateTime
   
   payment_method_id       String?
+  last_payment_date       DateTime?
+  next_billing_date       DateTime?
   
   created_at              DateTime @default(now())
   updated_at              DateTime @updatedAt
   
   tenant                  Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   plan                    SubscriptionPlan @relation(fields: [plan_id], references: [id])
-  payments                SubscriptionPayment[]
   
   @@index([tenant_id])
-  @@index([status])
-  @@index([current_period_end])
-}
-
-// ============================================
-// SUBSCRIPTION PAYMENT (Historial de pagos)
-// ============================================
-model SubscriptionPayment {
-  id              String   @id @default(uuid())
-  subscription_id String
-  amount          Decimal  @db.Decimal(10, 2)
-  status          String   // pending, completed, failed
-  payment_date    DateTime @default(now())
-  
-  payment_gateway String?  // "flow", "stripe", "transbank"
-  transaction_id  String?
-  
-  subscription    Subscription @relation(fields: [subscription_id], references: [id], onDelete: Cascade)
-  
-  @@index([subscription_id])
+  @@index([plan_id])
   @@index([status])
 }
 
 // ============================================
-// USER (Usuario) - Login por TELÉFONO
+// USER
 // ============================================
 model User {
   id           String   @id @default(uuid())
@@ -118,6 +98,7 @@ model User {
   tenant       Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
   sales        Sale[]
   cash_registers CashRegister[]
+  purchases    Purchase[]
   
   @@unique([id, tenant_id])
   @@index([tenant_id])
@@ -125,340 +106,380 @@ model User {
 }
 
 // ============================================
-// PRODUCT (Producto) - PARTICIONADO + TRACKING
+// PRODUCT PARENT
 // ============================================
-model Product {
-  id           String   @id @default(uuid())
-  tenant_id    String
-  name         String
-  unit_type    String?  // "kg", "unidad", "caja", etc
+model ProductParent {
+  id              String   @id @default(uuid())
+  tenant_id       String?
+  name            String
+  is_global       Boolean  @default(false)
+  suggested_unit  String?
+  active          Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
   
-  // Estado actual (cache)
-  current_price      Decimal? @db.Decimal(10, 2)
-  current_stock      Decimal? @db.Decimal(10, 3)
+  tenant          Tenant?           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  varieties       ProductVariety[]
   
-  // Estado de visibilidad
-  status       String   @default("active") // active, hidden, sold_out
-  alert_stock  Decimal? @db.Decimal(10, 3)
-  
-  active       Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
-  
-  tenant              Tenant              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  sale_items          SaleItem[]
-  purchase_items      PurchaseItem[]
-  product_prices      ProductPrice[]
-  price_history       ProductPriceHistory[]
-  stock_history       ProductStockHistory[]
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
-  @@index([tenant_id, status])
+  @@index([is_global, active, name])
+  @@index([tenant_id, active, name])
+  @@map("product_parents")
 }
 
 // ============================================
-// PRODUCT_PRICE (Precios por volumen)
+// PRODUCT VARIETY
 // ============================================
-model ProductPrice {
+model ProductVariety {
+  id              String   @id @default(uuid())
+  tenant_id       String
+  parent_id       String
+  name            String
+  unit_type       String
+  base_price      Decimal  @db.Decimal(10, 2)
+  current_stock   Decimal? @db.Decimal(10, 3)
+  alert_stock     Int?
+  active          Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  
+  tenant          Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  parent          ProductParent    @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+  price_options   VarietyPriceOption[]
+  sale_items      SaleItem[]
+  purchase_items  PurchaseItem[]
+  price_history   ProductPriceHistory[]
+  stock_history   ProductStockHistory[]
+  daily_sales     ProductDailySales[]
+  
+  @@index([tenant_id, parent_id, active])
+  @@index([tenant_id, active])
+  @@index([name])
+  @@map("product_varieties")
+}
+
+// ============================================
+// VARIETY PRICE OPTION
+// ============================================
+model VarietyPriceOption {
   id          String   @id @default(uuid())
-  tenant_id   String
-  product_id  String
-  
-  quantity    Decimal  @db.Decimal(10, 3) // 1, 3, 12
-  price       Decimal  @db.Decimal(10, 2)
-  label       String?  // "Unidad", "Promo 3x", "Caja 12"
-  
+  variety_id  String
+  quantity    Decimal  @db.Decimal(10, 3)
+  total_price Decimal  @db.Decimal(10, 2)
+  label       String?
   active      Boolean  @default(true)
   created_at  DateTime @default(now())
   
-  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  variety     ProductVariety  @relation(fields: [variety_id], references: [id], onDelete: Cascade)
   
-  @@unique([id, tenant_id])
-  @@index([tenant_id, product_id, active])
+  @@index([variety_id, active])
+  @@map("variety_price_options")
 }
 
 // ============================================
-// PRODUCT_PRICE_HISTORY (Historial de precios)
+// PRODUCT PRICE HISTORY
 // ============================================
 model ProductPriceHistory {
   id              String   @id @default(uuid())
   tenant_id       String
-  product_id      String
-  
-  old_price       Decimal? @db.Decimal(10, 2)
+  variety_id      String
+  old_price       Decimal  @db.Decimal(10, 2)
   new_price       Decimal  @db.Decimal(10, 2)
-  
-  change_reason   String?  // "apertura_dia", "descuento_tarde", "promocion", "manual"
-  changed_by      String
-  
   changed_at      DateTime @default(now())
-  
-  // Contexto del momento
+  changed_by      String?
+  reason          String?
   stock_at_change Decimal? @db.Decimal(10, 3)
-  hour_of_day     Int?
+  time_of_day     String?
+  day_of_week     Int?
   
-  product         Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  variety         ProductVariety  @relation(fields: [variety_id], references: [id], onDelete: Cascade)
   
-  @@index([tenant_id, product_id, changed_at])
-  @@index([changed_at])
-  @@index([hour_of_day])
+  @@index([variety_id, changed_at])
+  @@index([tenant_id, changed_at])
 }
 
 // ============================================
-// PRODUCT_STOCK_HISTORY (Historial de stock)
+// PRODUCT STOCK HISTORY
 // ============================================
 model ProductStockHistory {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  product_id      String
+  id            String   @id @default(uuid())
+  tenant_id     String
+  variety_id    String
+  old_stock     Decimal  @db.Decimal(10, 3)
+  new_stock     Decimal  @db.Decimal(10, 3)
+  change_type   String
+  reference_id  String?
+  changed_at    DateTime @default(now())
+  notes         String?
   
-  old_stock       Decimal? @db.Decimal(10, 3)
-  new_stock       Decimal  @db.Decimal(10, 3)
-  change_amount   Decimal  @db.Decimal(10, 3)
+  variety       ProductVariety  @relation(fields: [variety_id], references: [id], onDelete: Cascade)
   
-  change_type     String   // "compra", "venta", "ajuste", "perdida"
-  reference_id    String?
-  
-  changed_by      String
-  changed_at      DateTime @default(now())
-  
-  notes           String?
-  
-  product         Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  
-  @@index([tenant_id, product_id, changed_at])
-  @@index([change_type])
+  @@index([variety_id, changed_at])
+  @@index([tenant_id, change_type])
 }
 
 // ============================================
-// PROVIDER (Proveedor)
+// PRODUCT DAILY SALES
 // ============================================
-model Provider {
-  id           String   @id @default(uuid())
-  tenant_id    String
-  name         String
-  phone        String?
-  email        String?
-  address      String?
-  active       Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+model ProductDailySales {
+  id                String   @id @default(uuid())
+  tenant_id         String
+  cash_register_id  String
+  variety_id        String
+  sale_count        Int      @default(0)
+  last_sale_at      DateTime @default(now())
+  date              DateTime @default(now())
   
-  tenant       Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  purchases    Purchase[]
+  tenant            Tenant          @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  cash_register     CashRegister    @relation(fields: [cash_register_id], references: [id], onDelete: Cascade)
+  variety           ProductVariety  @relation(fields: [variety_id], references: [id], onDelete: Cascade)
+  
+  @@unique([cash_register_id, variety_id, date])
+  @@index([cash_register_id, sale_count])
+  @@index([tenant_id, date])
+}
+
+// ============================================
+// SALE
+// ============================================
+model Sale {
+  id               String   @id @default(uuid())
+  tenant_id        String
+  user_id          String
+  cash_register_id String
+  location_id      String?
+  total            Decimal  @db.Decimal(10, 2)
+  sale_date        DateTime @default(now())
+  synced           Boolean  @default(false)
+  local_id         String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  
+  tenant           Tenant       @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user             User         @relation(fields: [user_id], references: [id])
+  cash_register    CashRegister @relation(fields: [cash_register_id], references: [id])
+  location         Location?    @relation(fields: [location_id], references: [id])
+  items            SaleItem[]
+  payments         SalePayment[]
   
   @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([tenant_id, active])
+  @@index([tenant_id, sale_date])
+  @@index([cash_register_id])
+  @@index([local_id])
 }
 
 // ============================================
-// LOCATION (Ubicación/Feria)
+// SALE ITEM
+// ============================================
+model SaleItem {
+  id               String   @id @default(uuid())
+  sale_id          String
+  variety_id       String
+  product_name     String?
+  quantity         Decimal  @db.Decimal(10, 3)
+  unit_price       Decimal  @db.Decimal(10, 2)
+  subtotal         Decimal  @db.Decimal(10, 2)
+  is_special_price Boolean  @default(false)
+  special_price_reason String?
+  created_at       DateTime @default(now())
+  
+  sale             Sale           @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  variety          ProductVariety @relation(fields: [variety_id], references: [id])
+  
+  @@index([sale_id])
+  @@index([variety_id])
+}
+
+// ============================================
+// SALE PAYMENT
+// ============================================
+model SalePayment {
+  id             String        @id @default(uuid())
+  sale_id        String
+  payment_method PaymentMethod
+  amount         Decimal       @db.Decimal(10, 2)
+  reference      String?
+  created_at     DateTime      @default(now())
+  
+  sale           Sale          @relation(fields: [sale_id], references: [id], onDelete: Cascade)
+  
+  @@index([sale_id])
+}
+
+// ============================================
+// LOCATION (Ubicación)
 // ============================================
 model Location {
-  id           String   @id @default(uuid())
-  tenant_id    String
-  name         String
-  address      String?
-  active       Boolean  @default(true)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  tenant_id  String
+  name       String
+  address    String?
+  notes      String?  @db.Text
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
   
-  tenant       Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  sales        Sale[]
+  tenant     Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  sales      Sale[]
+  cash_registers CashRegister[]
   
   @@unique([id, tenant_id])
   @@index([tenant_id])
-  @@index([tenant_id, active])
+  @@map("locations")
 }
 
 // ============================================
-// CASH_REGISTER (Caja)
+// SUPPLIER (Proveedor)
+// ============================================
+model Supplier {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  name       String
+  phone      String?
+  location   String?
+  notes      String?  @db.Text
+  active     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  
+  tenant     Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  purchases  Purchase[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([name])
+  @@map("suppliers")
+}
+
+// ============================================
+// PURCHASE (Compra)
+// ============================================
+model Purchase {
+  id              String           @id @default(uuid())
+  tenant_id       String
+  user_id         String
+  supplier_id     String?
+  category        PurchaseCategory
+  total           Decimal          @db.Decimal(10, 2)
+  document_url    String?
+  notes           String?          @db.Text
+  purchase_date   DateTime         @default(now())
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+  
+  tenant          Tenant           @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [user_id], references: [id])
+  supplier        Supplier?        @relation(fields: [supplier_id], references: [id])
+  items           PurchaseItem[]
+  
+  @@unique([id, tenant_id])
+  @@index([tenant_id])
+  @@index([category])
+  @@index([purchase_date])
+  @@index([supplier_id])
+  @@map("purchases")
+}
+
+// ============================================
+// PURCHASE ITEM
+// ============================================
+model PurchaseItem {
+  id           String   @id @default(uuid())
+  purchase_id  String
+  variety_id   String
+  quantity     Decimal  @db.Decimal(10, 2)
+  unit_price   Decimal  @db.Decimal(10, 2)
+  subtotal     Decimal  @db.Decimal(10, 2)
+  created_at   DateTime @default(now())
+  
+  purchase     Purchase        @relation(fields: [purchase_id], references: [id], onDelete: Cascade)
+  variety      ProductVariety  @relation(fields: [variety_id], references: [id])
+  
+  @@index([purchase_id])
+  @@index([variety_id])
+  @@map("purchase_items")
+}
+
+// ============================================
+// CASH REGISTER
 // ============================================
 model CashRegister {
   id              String   @id @default(uuid())
   tenant_id       String
   user_id         String
   location_id     String?
-  
   opening_amount  Decimal  @db.Decimal(10, 2)
   closing_amount  Decimal? @db.Decimal(10, 2)
-  
   opened_at       DateTime @default(now())
   closed_at       DateTime?
-  
   status          String   @default("open")
-  
   notes           String?
   
-  tenant          Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  user            User     @relation(fields: [user_id], references: [id])
+  tenant          Tenant     @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+  user            User       @relation(fields: [user_id], references: [id])
+  location        Location?  @relation(fields: [location_id], references: [id])
   sales           Sale[]
+  movements       CashMovement[]
+  product_daily_sales ProductDailySales[]
   
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
   @@index([tenant_id, status])
-  @@index([user_id])
+  @@index([user_id, status])
 }
 
 // ============================================
-// SALE (Venta) - PARTICIONADO
+// CASH MOVEMENT
 // ============================================
-model Sale {
-  id                String   @id @default(uuid())
-  tenant_id         String
-  user_id           String
-  cash_register_id  String?
-  location_id       String?
+model CashMovement {
+  id               String   @id @default(uuid())
+  cash_register_id String
+  type             String
+  amount           Decimal  @db.Decimal(10, 2)
+  description      String
+  reference        String?
+  created_at       DateTime @default(now())
   
-  total             Decimal  @db.Decimal(10, 2)
+  cash_register    CashRegister @relation(fields: [cash_register_id], references: [id], onDelete: Cascade)
   
-  sale_date         DateTime @default(now())
-  
-  synced            Boolean  @default(false)
-  local_id          String?
-  
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  
-  tenant            Tenant        @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  user              User          @relation(fields: [user_id], references: [id])
-  cash_register     CashRegister? @relation(fields: [cash_register_id], references: [id])
-  location          Location?     @relation(fields: [location_id], references: [id])
-  items             SaleItem[]
-  payments          Payment[]
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([tenant_id, sale_date])
-  @@index([user_id])
-  @@index([cash_register_id])
-  @@index([synced])
+  @@index([cash_register_id, created_at])
 }
 
 // ============================================
-// SALE_ITEM (Item de Venta) - CON SNAPSHOT
+// AI RECOMMENDATION
 // ============================================
-model SaleItem {
-  id           String   @id @default(uuid())
-  tenant_id    String
-  sale_id      String
-  product_id   String
+model AIRecommendation {
+  id            String   @id @default(uuid())
+  tenant_id     String
+  type          String
+  priority      String
+  title         String
+  description   String
+  data          Json?
+  is_read       Boolean  @default(false)
+  created_at    DateTime @default(now())
+  expires_at    DateTime?
   
-  quantity     Decimal? @db.Decimal(10, 3)  // ← Ahora opcional (NULL para precio especial)
-  unit_price   Decimal  @db.Decimal(10, 2)
-  subtotal     Decimal  @db.Decimal(10, 2)
-  
-  // Snapshot para histórico
-  product_name String?
-  
-  // Identificar ventas con precio especial
-  is_special_price Boolean @default(false)
-  
-  sale         Sale     @relation(fields: [sale_id], references: [id], onDelete: Cascade)
-  product      Product  @relation(fields: [product_id], references: [id])
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([sale_id])
-  @@index([product_id])
-  @@index([tenant_id, is_special_price])  // Para reportes de ventas especiales
+  @@index([tenant_id, is_read, created_at])
+  @@index([tenant_id, type, priority])
 }
 
 // ============================================
-// PAYMENT (Pago)
+// ENUM CATEGORÍAS DE COMPRA
 // ============================================
-model Payment {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  sale_id         String
-  
-  payment_method  String
-  amount          Decimal  @db.Decimal(10, 2)
-  
-  reference       String?
-  
-  created_at      DateTime @default(now())
-  
-  sale            Sale     @relation(fields: [sale_id], references: [id], onDelete: Cascade)
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([sale_id])
+enum PurchaseCategory {
+  MERCADERIA
+  TRANSPORTE_BENCINA
+  MATERIALES
+  SUELDOS
+  PUBLICIDAD
+  GASTOS_FIJOS
+  IMPREVISTOS_OTROS
 }
 
 // ============================================
-// PURCHASE (Compra a Proveedor)
+// ENUM MÉTODOS DE PAGO
 // ============================================
-model Purchase {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  provider_id     String?
-  
-  total           Decimal  @db.Decimal(10, 2)
-  purchase_date   DateTime @default(now())
-  
-  notes           String?
-  
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  
-  tenant          Tenant         @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
-  provider        Provider?      @relation(fields: [provider_id], references: [id])
-  items           PurchaseItem[]
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([tenant_id, purchase_date])
-  @@index([provider_id])
-}
-
-// ============================================
-// PURCHASE_ITEM (Item de Compra)
-// ============================================
-model PurchaseItem {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  purchase_id     String
-  product_id      String?
-  
-  description     String
-  quantity        Decimal  @db.Decimal(10, 3)
-  unit_price      Decimal  @db.Decimal(10, 2)
-  subtotal        Decimal  @db.Decimal(10, 2)
-  
-  update_stock    Boolean  @default(false)
-  
-  purchase        Purchase @relation(fields: [purchase_id], references: [id], onDelete: Cascade)
-  product         Product? @relation(fields: [product_id], references: [id])
-  
-  @@unique([id, tenant_id])
-  @@index([tenant_id])
-  @@index([purchase_id])
-  @@index([product_id])
-}
-
-// ============================================
-// SYNC_QUEUE (Cola de Sincronización Offline)
-// ============================================
-model SyncQueue {
-  id              String   @id @default(uuid())
-  tenant_id       String
-  
-  operation_type  String
-  operation_data  Json
-  
-  status          String   @default("pending")
-  error_message   String?
-  
-  attempts        Int      @default(0)
-  
-  created_at      DateTime @default(now())
-  synced_at       DateTime?
-  
-  @@index([tenant_id])
-  @@index([status])
-  @@index([created_at])
+enum PaymentMethod {
+  cash
+  debit
+  credit
+  transfer
 }

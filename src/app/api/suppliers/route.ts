@@ -1,4 +1,4 @@
-// src/app/api/locations/route.ts
+// src/app/api/suppliers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -7,21 +7,23 @@ import { z } from 'zod';
 // ============================================
 // SCHEMAS
 // ============================================
-const createLocationSchema = z.object({
+const createSupplierSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
-  address: z.string().optional(),
+  phone: z.string().optional(),
+  location: z.string().optional(),
   notes: z.string().optional(),
 });
 
-const updateLocationSchema = z.object({
+const updateSupplierSchema = z.object({
   name: z.string().min(1).optional(),
-  address: z.string().optional(),
+  phone: z.string().optional(),
+  location: z.string().optional(),
   notes: z.string().optional(),
   active: z.boolean().optional(),
 });
 
 // ============================================
-// GET - Listar ubicaciones
+// GET - Listar proveedores
 // ============================================
 export async function GET(request: NextRequest) {
   try {
@@ -29,16 +31,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     
     const search = searchParams.get('search') || '';
-    const activeOnly = searchParams.get('active') === 'true';
+    const activeOnly = searchParams.get('active') !== 'false'; // Por defecto true
 
-    const locations = await prisma.location.findMany({
+    const suppliers = await prisma.supplier.findMany({
       where: {
         tenant_id: payload.tenantId,
         ...(activeOnly && { active: true }),
         ...(search && {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
-            { address: { contains: search, mode: 'insensitive' } },
+            { phone: { contains: search, mode: 'insensitive' } },
+            { location: { contains: search, mode: 'insensitive' } },
           ],
         }),
       },
@@ -46,24 +49,29 @@ export async function GET(request: NextRequest) {
         { active: 'desc' },
         { name: 'asc' },
       ],
+      include: {
+        _count: {
+          select: { purchases: true },
+        },
+      },
     });
 
     return NextResponse.json({
       success: true,
-      data: locations,
+      data: suppliers,
     });
 
   } catch (error: any) {
-    console.error('Error en GET /api/locations:', error);
+    console.error('Error en GET /api/suppliers:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al obtener ubicaciones' },
+      { success: false, error: error.message || 'Error al obtener proveedores' },
       { status: error.status || 500 }
     );
   }
 }
 
 // ============================================
-// POST - Crear ubicación
+// POST - Crear proveedor
 // ============================================
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +79,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validar datos
-    const validation = createLocationSchema.safeParse(body);
+    const validation = createSupplierSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         {
@@ -83,34 +91,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, address, notes } = validation.data;
+    const { name, phone, location, notes } = validation.data;
 
-    // Crear ubicación
-    const location = await prisma.location.create({
+    // Crear proveedor
+    const supplier = await prisma.supplier.create({
       data: {
         tenant_id: payload.tenantId,
         name,
-        address: address || null,
+        phone: phone || null,
+        location: location || null,
         notes: notes || null,
       },
     });
 
     return NextResponse.json({
       success: true,
-      data: location,
+      data: supplier,
     }, { status: 201 });
 
   } catch (error: any) {
-    console.error('Error en POST /api/locations:', error);
+    console.error('Error en POST /api/suppliers:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al crear ubicación' },
+      { success: false, error: error.message || 'Error al crear proveedor' },
       { status: 500 }
     );
   }
 }
 
 // ============================================
-// PATCH - Actualizar ubicación
+// PATCH - Actualizar proveedor
 // ============================================
 export async function PATCH(request: NextRequest) {
   try {
@@ -126,7 +135,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validar datos
-    const validation = updateLocationSchema.safeParse(updates);
+    const validation = updateSupplierSchema.safeParse(updates);
     if (!validation.success) {
       return NextResponse.json(
         {
@@ -139,7 +148,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Verificar que pertenezca al tenant
-    const existing = await prisma.location.findFirst({
+    const existing = await prisma.supplier.findFirst({
       where: {
         id,
         tenant_id: payload.tenantId,
@@ -148,33 +157,33 @@ export async function PATCH(request: NextRequest) {
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: 'Ubicación no encontrada' },
+        { success: false, error: 'Proveedor no encontrado' },
         { status: 404 }
       );
     }
 
     // Actualizar
-    const location = await prisma.location.update({
+    const supplier = await prisma.supplier.update({
       where: { id },
       data: validation.data,
     });
 
     return NextResponse.json({
       success: true,
-      data: location,
+      data: supplier,
     });
 
   } catch (error: any) {
-    console.error('Error en PATCH /api/locations:', error);
+    console.error('Error en PATCH /api/suppliers:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al actualizar ubicación' },
+      { success: false, error: error.message || 'Error al actualizar proveedor' },
       { status: 500 }
     );
   }
 }
 
 // ============================================
-// DELETE - Eliminar ubicación (soft delete)
+// DELETE - Eliminar proveedor (soft delete)
 // ============================================
 export async function DELETE(request: NextRequest) {
   try {
@@ -190,7 +199,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar que pertenezca al tenant
-    const existing = await prisma.location.findFirst({
+    const existing = await prisma.supplier.findFirst({
       where: {
         id,
         tenant_id: payload.tenantId,
@@ -199,26 +208,44 @@ export async function DELETE(request: NextRequest) {
 
     if (!existing) {
       return NextResponse.json(
-        { success: false, error: 'Ubicación no encontrada' },
+        { success: false, error: 'Proveedor no encontrado' },
         { status: 404 }
       );
     }
 
-    // Soft delete
-    const location = await prisma.location.update({
-      where: { id },
-      data: { active: false },
+    // Verificar si tiene compras asociadas
+    const purchaseCount = await prisma.purchase.count({
+      where: { supplier_id: id },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: location,
-    });
+    if (purchaseCount > 0) {
+      // Soft delete si tiene compras
+      const supplier = await prisma.supplier.update({
+        where: { id },
+        data: { active: false },
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: supplier,
+        message: 'Proveedor desactivado (tiene compras asociadas)',
+      });
+    } else {
+      // Hard delete si no tiene compras
+      await prisma.supplier.delete({
+        where: { id },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Proveedor eliminado',
+      });
+    }
 
   } catch (error: any) {
-    console.error('Error en DELETE /api/locations:', error);
+    console.error('Error en DELETE /api/suppliers:', error);
     return NextResponse.json(
-      { success: false, error: error.message || 'Error al eliminar ubicación' },
+      { success: false, error: error.message || 'Error al eliminar proveedor' },
       { status: 500 }
     );
   }

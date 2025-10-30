@@ -1,74 +1,88 @@
 // src/stores/cartStore.ts
 import { create } from 'zustand';
-import type { CartItem } from '@/types';
 
-interface CartState {
-  items: CartItem[];
-  addItem: (item: Omit<CartItem, 'subtotal'>) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
-  removeItem: (productId: string) => void;
-  clearCart: () => void;
-  getTotal: () => number;
-  getItemCount: () => number;
+export interface CartItem {
+  varietyId: string;
+  productName: string;
+  quantity: number;  // Cantidad de unidades O cantidad de paquetes
+  unitPrice: number;
+  subtotal: number;
+  isSpecialPrice?: boolean;
+  specialPriceReason?: string;
+  packageLabel?: string;
+  packageQuantity?: number;  // ← NUEVO: Cantidad de unidades por paquete (ej: 3kg)
+  packageCount?: number;     // ← NUEVO: Cantidad de paquetes (ej: 2 paquetes)
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+interface CartStore {
+  items: CartItem[];
+  addItem: (item: Omit<CartItem, 'subtotal'>) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;  // Cambiar a itemId único
+  removeItem: (itemId: string) => void;  // Cambiar a itemId único
+  clearCart: () => void;
+  getTotal: () => number;
+}
+
+export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
 
   addItem: (item) => {
-    const items = get().items;
-    const existingItem = items.find(i => i.productId === item.productId);
-
-    if (existingItem) {
-      // Si ya existe, incrementar cantidad
-      set({
-        items: items.map(i =>
-          i.productId === item.productId
-            ? {
-                ...i,
-                quantity: i.quantity + item.quantity,
-                subtotal: (i.quantity + item.quantity) * i.unitPrice,
-              }
-            : i
-        ),
-      });
-    } else {
-      // Agregar nuevo item
-      set({
-        items: [
-          ...items,
-          {
-            ...item,
-            subtotal: item.quantity * item.unitPrice,
-          },
-        ],
-      });
-    }
+    const subtotal = item.quantity * item.unitPrice;
+    set((state) => ({
+      items: [...state.items, { ...item, subtotal }],
+    }));
   },
 
-  updateQuantity: (productId, quantity) => {
+  updateQuantity: (itemId, quantity) => {
     if (quantity <= 0) {
-      get().removeItem(productId);
-      return;
-    }
-
-    set({
-      items: get().items.map(item =>
-        item.productId === productId
-          ? {
-              ...item,
-              quantity,
-              subtotal: quantity * item.unitPrice,
+      set((state) => ({
+        items: state.items.filter((item, index) => {
+          const id = item.packageLabel 
+            ? `${item.varietyId}-${item.packageLabel}-${index}`
+            : `${item.varietyId}-${index}`;
+          return id !== itemId;
+        }),
+      }));
+    } else {
+      set((state) => ({
+        items: state.items.map((item, index) => {
+          const id = item.packageLabel 
+            ? `${item.varietyId}-${item.packageLabel}-${index}`
+            : `${item.varietyId}-${index}`;
+          
+          if (id === itemId) {
+            // Si es paquete, recalcular basado en packageCount
+            if (item.packageLabel && item.packageQuantity) {
+              const newTotalQuantity = item.packageQuantity * quantity;
+              return { 
+                ...item, 
+                packageCount: quantity,
+                quantity: newTotalQuantity,
+                subtotal: newTotalQuantity * item.unitPrice 
+              };
             }
-          : item
-      ),
-    });
+            // Si es custom, actualizar cantidad directamente
+            return { 
+              ...item, 
+              quantity, 
+              subtotal: quantity * item.unitPrice 
+            };
+          }
+          return item;
+        }),
+      }));
+    }
   },
 
-  removeItem: (productId) => {
-    set({
-      items: get().items.filter(item => item.productId !== productId),
-    });
+  removeItem: (itemId) => {
+    set((state) => ({
+      items: state.items.filter((item, index) => {
+        const id = item.packageLabel 
+          ? `${item.varietyId}-${item.packageLabel}-${index}`
+          : `${item.varietyId}-${index}`;
+        return id !== itemId;
+      }),
+    }));
   },
 
   clearCart: () => {
@@ -77,9 +91,5 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   getTotal: () => {
     return get().items.reduce((sum, item) => sum + item.subtotal, 0);
-  },
-
-  getItemCount: () => {
-    return get().items.reduce((sum, item) => sum + item.quantity, 0);
   },
 }));

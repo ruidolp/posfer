@@ -1,0 +1,163 @@
+// src/components/sales/ChangeCalculator.tsx
+'use client';
+
+import { useState } from 'react';
+import { formatCurrency, cn } from '@/lib/utils';
+
+interface ChangeCalculatorProps {
+  total: number;
+  onConfirm: (amountPaid: number) => void;
+  onCancel: () => void;
+}
+
+const CHILEAN_BILLS = [
+  { value: 20000, label: '$20.000' },
+  { value: 10000, label: '$10.000' },
+  { value: 5000, label: '$5.000' },
+  { value: 2000, label: '$2.000' },
+  { value: 1000, label: '$1.000' },
+];
+
+export default function ChangeCalculator({ total, onConfirm, onCancel }: ChangeCalculatorProps) {
+  const [selectedBill, setSelectedBill] = useState<number | null>(null);
+  const [manualAmount, setManualAmount] = useState<string>('');
+  const [isManual, setIsManual] = useState(false);
+
+  const handleBillClick = (value: number) => {
+    setSelectedBill(value);
+    setIsManual(false);
+    setManualAmount('');
+  };
+
+  const handleManualChange = (value: string) => {
+    setManualAmount(value);
+    setSelectedBill(null);
+    setIsManual(true);
+  };
+
+  const getAmountPaid = (): number => {
+    if (isManual && manualAmount) {
+      return parseFloat(manualAmount) || 0;
+    }
+    return selectedBill || 0;
+  };
+
+  const amountPaid = getAmountPaid();
+  const change = amountPaid - total;
+
+  const handleConfirm = () => {
+    if (amountPaid < total) {
+      alert('El monto pagado es menor al total');
+      return;
+    }
+    onConfirm(amountPaid);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Total a pagar */}
+      <div className="bg-secondary/30 rounded-xl p-4">
+        <div className="text-sm text-muted-foreground mb-1">Total a pagar:</div>
+        <div className="text-3xl font-bold text-foreground">
+          {formatCurrency(total)}
+        </div>
+      </div>
+
+      {/* Billetes */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-3">
+          Cliente paga con:
+        </label>
+        <div className="grid grid-cols-3 gap-2">
+          {CHILEAN_BILLS.map((bill) => (
+            <button
+              key={bill.value}
+              onClick={() => handleBillClick(bill.value)}
+              className={cn(
+                'p-4 rounded-xl border-2 transition-all',
+                'hover:border-primary hover:bg-primary/5',
+                'min-h-touch',
+                selectedBill === bill.value
+                  ? 'border-primary bg-primary text-primary-foreground font-bold'
+                  : 'border-border bg-secondary/30 text-foreground font-medium'
+              )}
+            >
+              {bill.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Separador */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-border" />
+        <span className="text-sm text-muted-foreground">o ingresa monto</span>
+        <div className="flex-1 h-px bg-border" />
+      </div>
+
+      {/* Monto manual */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Monto manual:
+        </label>
+        <input
+          type="number"
+          step="1"
+          value={manualAmount}
+          onChange={(e) => handleManualChange(e.target.value)}
+          placeholder="$0"
+          className={cn(
+            'w-full px-4 py-4 rounded-xl border-2',
+            'text-2xl font-bold text-center',
+            'focus:outline-none focus:ring-2 focus:ring-primary',
+            isManual
+              ? 'border-primary bg-primary/5'
+              : 'border-border bg-background'
+          )}
+        />
+      </div>
+
+      {/* Vuelto */}
+      {amountPaid > 0 && (
+        <div className={cn(
+          'rounded-xl p-4 border-2',
+          change >= 0
+            ? 'bg-green-50 border-green-200'
+            : 'bg-red-50 border-red-200'
+        )}>
+          <div className="text-sm font-medium mb-1">
+            {change >= 0 ? 'Vuelto:' : 'Falta:'}
+          </div>
+          <div className={cn(
+            'text-4xl font-bold',
+            change >= 0 ? 'text-green-600' : 'text-red-600'
+          )}>
+            {formatCurrency(Math.abs(change))}
+          </div>
+        </div>
+      )}
+
+      {/* Botones */}
+      <div className="grid grid-cols-2 gap-3 pt-2">
+        <button
+          onClick={onCancel}
+          className="py-4 rounded-xl bg-secondary hover:bg-secondary/80 font-bold transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={amountPaid < total}
+          className={cn(
+            'py-4 rounded-xl font-bold transition-colors',
+            amountPaid >= total
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'bg-secondary/50 text-muted-foreground cursor-not-allowed'
+          )}
+        >
+          Confirmar
+        </button>
+      </div>
+    </div>
+  );
+}

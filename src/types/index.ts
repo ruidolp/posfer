@@ -1,106 +1,41 @@
 // src/types/index.ts
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-// ============================================
-// AUTH TYPES
-// ============================================
-
-export interface LoginRequest {
+export interface User {
+  id: string;
   phone: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  phone: string;
-  password: string;
-  name: string;
-  businessName: string;
   email?: string;
+  name: string;
+  tenantId: string;
+  businessName: string;
+  role: string;
+  theme: string;
+  currency: string;
+  active: boolean;
 }
-
-export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    phone: string;
-    name: string;
-    email?: string;
-    tenantId: string;
-    role: string;
-  };
-}
-
-// ============================================
-// PRODUCT TYPES
-// ============================================
 
 export interface Product {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
-  price: number;
-  unitType?: string;
-  stock?: number;
-  alertStock?: number;
+  unit_type?: string;
+  current_price: number;
+  current_stock?: number;
+  alert_stock?: number;
+  status: string;
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
+  score?: number; // Para ordenamiento por más vendidos
 }
 
-export interface ProductFormData {
-  name: string;
-  price: number;
-  unitType?: string;
-  stock?: number;
-  alertStock?: number;
-}
-
-// ============================================
-// SALE TYPES
-// ============================================
-
-export interface Sale {
+export interface ProductPriceOption {
   id: string;
-  tenantId: string;
-  userId: string;
-  cashRegisterId?: string;
-  locationId?: string;
-  total: number;
-  saleDate: Date;
-  synced: boolean;
-  localId?: string;
-  items: SaleItem[];
-  payments: Payment[];
-}
-
-export interface SaleItem {
-  id: string;
-  productId: string;
-  product?: Product;
+  product_id: string;
   quantity: number;
-  unitPrice: number;
-  subtotal: number;
-}
-
-export interface Payment {
-  id: string;
-  paymentMethod: 'cash' | 'transfer' | 'debit' | 'credit';
-  amount: number;
-  reference?: string;
+  total_price: number;
+  label?: string;
+  active: boolean;
+  created_at: string;
 }
 
 export interface CartItem {
@@ -109,173 +44,120 @@ export interface CartItem {
   unitPrice: number;
   quantity: number;
   subtotal: number;
+  isSpecialPrice?: boolean;      // ← Campo agregado
+  specialPriceReason?: string;   // ← Campo agregado
 }
 
-export interface SaleFormData {
-  items: CartItem[];
-  payments: Payment[];
+export interface Payment {
+  paymentMethod: 'cash' | 'transfer' | 'debit' | 'credit';
+  amount: number;
+  reference?: string;
+}
+
+export interface Sale {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  cash_register_id: string;
+  location_id?: string;
   total: number;
-  locationId?: string;
+  sale_date: string;
+  synced: boolean;
+  created_at: string;
+  items?: SaleItem[];
+  payments?: SalePayment[];
 }
 
-// ============================================
-// CASH REGISTER TYPES
-// ============================================
+export interface SaleItem {
+  id: string;
+  sale_id: string;
+  product_id: string;
+  product_name?: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  is_special_price: boolean;
+  special_price_reason?: string;
+  created_at: string;
+  product?: Product;
+}
+
+export interface SalePayment {
+  id: string;
+  sale_id: string;
+  payment_method: string;
+  amount: number;
+  reference?: string;
+  created_at: string;
+}
 
 export interface CashRegister {
   id: string;
-  tenantId: string;
-  userId: string;
-  locationId?: string;
-  openingAmount: number;
-  closingAmount?: number;
-  openedAt: Date;
-  closedAt?: Date;
-  status: 'open' | 'closed';
+  tenant_id: string;
+  user_id: string;
+  location_id?: string;
+  opening_amount: number;
+  closing_amount?: number;
+  opened_at: string;
+  closed_at?: string;
+  status: string;
   notes?: string;
 }
-
-export interface OpenCashRegisterRequest {
-  openingAmount: number;
-  locationId?: string;
-  notes?: string;
-}
-
-export interface CloseCashRegisterRequest {
-  closingAmount: number;
-  notes?: string;
-}
-
-// ============================================
-// PROVIDER TYPES
-// ============================================
 
 export interface Provider {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   phone?: string;
   email?: string;
   address?: string;
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
 }
-
-export interface ProviderFormData {
-  name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-}
-
-// ============================================
-// LOCATION TYPES
-// ============================================
 
 export interface Location {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   address?: string;
   active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface LocationFormData {
+export interface User {
+  id: string;
+  tenantId: string;  // ← Correcto (camelCase)
+  phone: string;
+  email?: string;
   name: string;
-  address?: string;
+  role: string;
+  active: boolean;
 }
 
-// ============================================
-// PURCHASE TYPES
-// ============================================
-
-export interface Purchase {
-  id: string;
-  tenantId: string;
-  providerId?: string;
-  provider?: Provider;
-  total: number;
-  purchaseDate: Date;
-  notes?: string;
-  items: PurchaseItem[];
+export interface Payment {
+  paymentMethod: string;
+  amount: number;
+  reference?: string;
 }
 
-export interface PurchaseItem {
+export interface Product {
   id: string;
-  productId?: string;
-  product?: Product;
-  description: string;
+  name: string;
+  unit_type?: string;
+  current_price: number;
+  current_stock?: number;
+  active: boolean;
+}
+
+export interface CartItem {
+  productId: string;
+  productName: string;
   quantity: number;
   unitPrice: number;
   subtotal: number;
-  updateStock: boolean;
+  isSpecialPrice?: boolean;
+  specialPriceReason?: string;
 }
 
-export interface PurchaseFormData {
-  providerId?: string;
-  purchaseDate: Date;
-  items: {
-    productId?: string;
-    description: string;
-    quantity: number;
-    unitPrice: number;
-    updateStock: boolean;
-  }[];
-  notes?: string;
-}
-
-// ============================================
-// SYNC TYPES
-// ============================================
-
-export interface SyncOperation {
-  id: string;
-  tenantId: string;
-  operationType: 'sale' | 'purchase' | 'product_update';
-  operationData: any;
-  status: 'pending' | 'synced' | 'error';
-  errorMessage?: string;
-  attempts: number;
-  createdAt: Date;
-  syncedAt?: Date;
-}
-
-// ============================================
-// THEME TYPES
-// ============================================
-
-export type ThemeType = 
-  | 'high_contrast' 
-  | 'sunny_day' 
-  | 'cloudy' 
-  | 'sunset';
-
-export interface ThemeConfig {
-  id: ThemeType;
-  name: string;
-  description: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    text: string;
-    accent: string;
-  };
-}
-
-// ============================================
-// TENANT/CONFIG TYPES
-// ============================================
-
-export interface TenantConfig {
-  id: string;
-  businessName: string;
-  phone: string;
-  currency: string;
-  theme: ThemeType;
-  createdAt: Date;
-  updatedAt: Date;
-}

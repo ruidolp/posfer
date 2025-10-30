@@ -18,22 +18,7 @@ export default function AbrirCajaPage() {
 
   useEffect(() => {
     loadLocations();
-    checkExistingCashRegister();
   }, []);
-
-  const checkExistingCashRegister = async () => {
-    try {
-      const response = await fetch('/api/cash-register/current');
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        alert('Ya tienes una caja abierta');
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
 
   const loadLocations = async () => {
     try {
@@ -64,8 +49,8 @@ export default function AbrirCajaPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           openingAmount: parseFloat(formData.openingAmount),
-          locationId: formData.locationId || null,
-          notes: formData.notes || null,
+          locationId: formData.locationId || undefined,
+          notes: formData.notes || undefined,
         }),
       });
 
