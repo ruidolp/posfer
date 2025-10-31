@@ -94,4 +94,4 @@ export interface SalePayment {
   reference?: string;
 }
 
-export type ThemeType = 'light' | 'dark' | 'blue' | 'green' | 'high_contrast';
+export type ThemeType = 'high_contrast' | 'sunny_day' | 'cloudy' | 'sunset';

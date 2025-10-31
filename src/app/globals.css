@@ -3,54 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-  }
-}
-
+/* ============================================ */
 /* TEMA: ALTO CONTRASTE (Default) */
+/* ============================================ */
 [data-theme="high_contrast"] {
   --background: 0 0% 100%;
   --foreground: 0 0% 0%;
@@ -62,11 +17,18 @@
   --secondary-foreground: 0 0% 0%;
   --accent: 0 0% 10%;
   --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
   --border: 0 0% 20%;
   --input: 0 0% 90%;
+  --ring: 0 0% 0%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
 }
 
+/* ============================================ */
 /* TEMA: DÍA SOLEADO */
+/* ============================================ */
 [data-theme="sunny_day"] {
   --background: 210 100% 97%;
   --foreground: 220 90% 10%;
@@ -78,11 +40,18 @@
   --secondary-foreground: 220 90% 10%;
   --accent: 45 100% 50%;
   --accent-foreground: 220 90% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
   --border: 220 50% 70%;
   --input: 210 50% 95%;
+  --ring: 220 90% 25%;
+  --muted: 210 50% 95%;
+  --muted-foreground: 220 50% 40%;
 }
 
+/* ============================================ */
 /* TEMA: NUBLADO */
+/* ============================================ */
 [data-theme="cloudy"] {
   --background: 200 10% 95%;
   --foreground: 200 30% 10%;
@@ -94,11 +63,18 @@
   --secondary-foreground: 200 30% 10%;
   --accent: 150 40% 50%;
   --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
   --border: 200 20% 70%;
   --input: 200 15% 90%;
+  --ring: 150 50% 35%;
+  --muted: 200 15% 90%;
+  --muted-foreground: 200 30% 40%;
 }
 
+/* ============================================ */
 /* TEMA: ATARDECER */
+/* ============================================ */
 [data-theme="sunset"] {
   --background: 30 30% 95%;
   --foreground: 25 50% 15%;
@@ -110,8 +86,13 @@
   --secondary-foreground: 25 50% 15%;
   --accent: 10 80% 55%;
   --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
   --border: 30 30% 75%;
   --input: 30 25% 92%;
+  --ring: 20 70% 45%;
+  --muted: 30 25% 92%;
+  --muted-foreground: 25 50% 40%;
 }
 
 @layer base {
@@ -121,73 +102,25 @@
   
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
-  html {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-  }
-  
-  body {
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-}
 
-@layer components {
-  .btn-touch {
-    @apply min-h-touch min-w-touch px-6 py-3 text-lg font-semibold rounded-lg;
-    @apply active:scale-95 transition-transform;
-  }
-  
-  .btn-touch-lg {
-    @apply min-h-touch-lg min-w-touch-lg px-8 py-4 text-xl font-bold rounded-xl;
-    @apply active:scale-95 transition-transform;
-  }
-  
-  .input-touch {
-    @apply min-h-touch px-4 text-lg rounded-lg;
-  }
-  
-  .card-outdoor {
-    @apply bg-card rounded-xl shadow-lg border-2 border-border;
-  }
-  
-  .text-outdoor {
-    @apply font-semibold tracking-wide;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  /* Touch optimizations */
+  button, 
+  a,
+  input,
+  select,
+  textarea {
+    @apply touch-manipulation;
   }
 }
 
 @layer utilities {
-  .scroll-touch {
-    -webkit-overflow-scrolling: touch;
+  /* Tamaño mínimo táctil (44px x 44px según HIG de Apple y Material Design) */
+  .min-h-touch {
+    min-height: 44px;
   }
   
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .safe-top {
-    padding-top: env(safe-area-inset-top);
-  }
-  
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  .safe-left {
-    padding-left: env(safe-area-inset-left);
-  }
-  
-  .safe-right {
-    padding-right: env(safe-area-inset-right);
+  .min-w-touch {
+    min-width: 44px;
   }
 }

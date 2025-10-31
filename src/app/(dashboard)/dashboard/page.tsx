@@ -7,30 +7,11 @@ import {
   ShoppingCart, 
   DollarSign,
   Clock,
-  TrendingUp,
-  Megaphone
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-
-// Noticias dummy (a futuro vendrán de un API)
-const DUMMY_NEWS = [
-  {
-    id: 1,
-    date: '21 octubre 2025',
-    icon: TrendingUp,
-    message: 'Sube la UF',
-    type: 'info' as const,
-  },
-  {
-    id: 2,
-    date: '20 octubre',
-    icon: Megaphone,
-    message: 'Ahora puedes descontar tus productos',
-    type: 'success' as const,
-  },
-];
+import ThemeSwitcher from '@/components/common/ThemeSwitcher';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -161,35 +142,34 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
-      ) : null}
-
-      {/* Recomendaciones / Noticias */}
-      <div>
-        <h2 className="text-xl font-bold mb-4">Recomendaciones</h2>
-        <div className="space-y-3">
-          {DUMMY_NEWS.map((news) => {
-            const Icon = news.icon;
-            return (
-              <div
-                key={news.id}
-                className="bg-card border-2 border-border rounded-xl p-4 flex items-start gap-4 hover:shadow-md transition-shadow"
-              >
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-xs text-muted-foreground mb-1">
-                    {news.date}
-                  </div>
-                  <div className="font-semibold text-foreground">
-                    {news.message}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      ) : (
+        <div className="bg-card border-2 border-border rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-muted-foreground" />
+              No hay caja abierta
+            </h2>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Debes abrir una caja para comenzar a vender
+          </p>
+          <Link
+            href="/dashboard/caja/abrir"
+            className={cn(
+              'w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg',
+              'min-h-touch text-base font-semibold',
+              'bg-primary text-primary-foreground',
+              'hover:bg-primary/90 transition-colors'
+            )}
+          >
+            <DollarSign className="w-5 h-5" />
+            Abrir Caja
+          </Link>
         </div>
-      </div>
+      )}
+
+      {/* Selector de Tema */}
+      <ThemeSwitcher />
 
       {/* Resumen de ventas recientes */}
       {todaySales.length > 0 && (
