@@ -189,7 +189,11 @@ export default function AddProductModal({ onClose, onAdd }: AddProductModalProps
         varietyId = varietyData.data.id;
       }
 
-      // 3. Agregar al carrito
+      // 3. Retornar datos para agregar al carrito
+      if (!varietyId) {
+        throw new Error('Error al crear variedad');
+      }
+
       onAdd({
         varietyId,
         productName: `${newParentName.trim()} - ${newVarietyName.trim()}`,

@@ -1,131 +1,56 @@
 // src/lib/auth.ts
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 export interface JWTPayload {
   userId: string;
   tenantId: string;
-  phone: string;
   role: string;
+  phone?: string;
 }
 
-export interface AuthUser {
-  id: string;
-  tenantId: string;
-  phone: string;
-  email?: string;
-  name: string;
-  role: string;
-}
-
-/**
- * Genera un JWT token
- */
-export function generateToken(payload: JWTPayload): string {
+export function signToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
+    expiresIn: '7d',
+  } as jwt.SignOptions);
 }
 
-/**
- * Verifica y decodifica un JWT token
- */
-export function verifyToken(token: string): JWTPayload | null {
+export function generateToken(payload: JWTPayload): string {
+  return signToken(payload);
+}
+
+export function verifyToken(token: string): JWTPayload {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    return decoded;
+    return jwt.verify(token, JWT_SECRET) as JWTPayload;
   } catch (error) {
-    return null;
+    throw new Error('Token inválido');
   }
 }
 
-/**
- * Hashea una contraseña
- */
 export async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(10);
-  return bcrypt.hash(password, salt);
+  return bcrypt.hash(password, 10);
 }
 
-/**
- * Compara una contraseña con su hash
- */
-export async function comparePassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
-/**
- * Normaliza el número de teléfono a formato estándar
- * Ejemplos:
- * +56912345678 -> +56912345678
- * 912345678 -> +56912345678
- * 9 1234 5678 -> +56912345678
- */
 export function normalizePhone(phone: string): string {
-  let cleaned = phone.replace(/\s+/g, '').replace(/\D/g, '');
-  
-  if (cleaned.startsWith('569')) {
-    return `+${cleaned}`;
-  }
-  
-  if (cleaned.startsWith('9') && cleaned.length === 9) {
-    return `+56${cleaned}`;
-  }
-  
-  if (cleaned.startsWith('56') && cleaned.length === 11) {
-    return `+${cleaned}`;
-  }
-  
-  return phone;
+  return phone.replace(/\D/g, '');
 }
 
-/**
- * Valida formato de teléfono chileno
- */
 export function isValidPhone(phone: string): boolean {
   const normalized = normalizePhone(phone);
-  const phoneRegex = /^\+569\d{8}$/;
-  return phoneRegex.test(normalized);
+  return normalized.length >= 8 && normalized.length <= 15;
 }
 
-/**
- * Obtiene el usuario actual desde las cookies (Server Component)
- */
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export async function setAuthCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth_token')?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  const payload = verifyToken(token);
-  if (!payload) {
-    return null;
-  }
-
-  return {
-    id: payload.userId,
-    tenantId: payload.tenantId,
-    phone: payload.phone,
-    name: '',
-    role: payload.role,
-  };
-}
-
-/**
- * Establece el token de autenticación en las cookies
- */
-export async function setAuthCookie(token: string) {
-  const cookieStore = await cookies();
-  cookieStore.set('auth_token', token, {
+  cookieStore.set('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -134,29 +59,32 @@ export async function setAuthCookie(token: string) {
   });
 }
 
-/**
- * Elimina el token de autenticación
- */
-export async function clearAuthCookie() {
+export async function clearAuthCookie(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete('auth_token');
+  cookieStore.delete('token');
 }
 
-/**
- * Middleware para proteger rutas (uso en API routes)
- */
 export async function requireAuth(): Promise<JWTPayload> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('auth_token')?.value;
+  const token = cookieStore.get('token')?.value;
 
   if (!token) {
-    throw new Error('No autorizado');
+    throw Object.assign(new Error('No autenticado'), { status: 401 });
   }
 
-  const payload = verifyToken(token);
-  if (!payload) {
-    throw new Error('Token inválido');
+  return verifyToken(token);
+}
+
+export async function getAuthFromRequest(request: NextRequest): Promise<JWTPayload | null> {
+  const token = request.cookies.get('token')?.value;
+  
+  if (!token) {
+    return null;
   }
 
-  return payload;
+  try {
+    return verifyToken(token);
+  } catch {
+    return null;
+  }
 }

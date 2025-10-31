@@ -195,7 +195,7 @@ async function processPostSaleOperations({
       if (!variety) continue;
 
       const oldStock = variety.current_stock || 0;
-      const newStock = oldStock - item.quantity;
+      const newStock = Number(oldStock) - Number(item.quantity);
 
       // 2. Actualizar stock de la variedad
       await prisma.productVariety.update({
