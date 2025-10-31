@@ -211,31 +211,31 @@ export default function NuevaVentaPage() {
                     className={cn(
                       'w-full bg-card border-2 border-border rounded-xl p-3',
                       'hover:border-primary hover:bg-primary/5 transition-all',
-                      'text-left min-h-[90px] flex flex-col justify-between',
-                      'active:scale-95'
+                      'text-center h-[100px] flex flex-col justify-center gap-2',
+                      'active:scale-95 relative'
                     )}
                   >
-                    <div>
-                      <div className="font-bold text-foreground text-base mb-0.5">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {variety.name}
-                      </div>
-                      {variety.current_stock !== null && variety.current_stock < 10 && (
-                        <div className="text-xs text-destructive mt-1">
-                          Stock: {variety.current_stock}
-                        </div>
-                      )}
+                    {/* Línea 1: Título */}
+                    <div className="font-bold text-foreground text-base leading-tight truncate uppercase">
+                      {product.name} {variety.name}
                     </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="text-xs text-muted-foreground">
-                        por {variety.unit_type}
-                      </div>
-                      <div className="text-primary font-bold text-lg">
+                    
+                    {/* Línea 2: Precio + Unidad */}
+                    <div className="flex items-baseline justify-center gap-1.5">
+                      <span className="text-primary font-bold text-base">
                         {formatCurrency(variety.base_price)}
-                      </div>
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        / {variety.unit_type}
+                      </span>
                     </div>
+
+                    {/* Stock bajo (opcional, fuera del flujo) */}
+                    {variety.current_stock !== null && variety.current_stock < 10 && (
+                      <div className="text-xs text-destructive absolute top-1 right-1 bg-destructive/10 px-1.5 py-0.5 rounded">
+                        {variety.current_stock}
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>

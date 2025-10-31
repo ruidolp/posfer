@@ -14,10 +14,10 @@ interface CashRegister {
 interface SalesToday {
   totalSales: number;
   paymentBreakdown: {
-    EFECTIVO: number;
-    DEBITO: number;
-    CREDITO: number;
-    TRANSFERENCIA: number;
+    cash: number;
+    debit: number;
+    credit: number;
+    transfer: number;
   };
   salesCount: number;
 }

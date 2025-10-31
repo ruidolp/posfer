@@ -204,24 +204,26 @@ export async function GET(request: NextRequest) {
       });
 
       // Ordenar por score de ventas
-      const sortedProducts = products.sort((a, b) => {
-        const maxScoreA = Math.max(
-          ...a.varieties.map(v => varietyScores.get(v.id) || 0),
-          0
-        );
-        const maxScoreB = Math.max(
-          ...b.varieties.map(v => varietyScores.get(v.id) || 0),
-          0
-        );
-        
-        if (maxScoreB !== maxScoreA) {
-          return maxScoreB - maxScoreA; // Mayor score primero
-        }
-        
-        return a.name.localeCompare(b.name); // Alfabético como fallback
-      });
+      const sortedProducts = products
+        .filter(p => p.varieties.length > 0) // Solo productos con variedades
+        .sort((a, b) => {
+          const maxScoreA = Math.max(
+            ...a.varieties.map(v => varietyScores.get(v.id) || 0),
+            0
+          );
+          const maxScoreB = Math.max(
+            ...b.varieties.map(v => varietyScores.get(v.id) || 0),
+            0
+          );
+          
+          if (maxScoreB !== maxScoreA) {
+            return maxScoreB - maxScoreA; // Mayor score primero
+          }
+          
+          return a.name.localeCompare(b.name); // Alfabético como fallback
+        });
 
-      console.log('✅ Productos ordenados por ventas:', sortedProducts.length);
+      console.log('✅ Productos ordenados por ventas:', sortedProducts.length, 'de', products.length, 'totales');
 
       return NextResponse.json({
         success: true,
