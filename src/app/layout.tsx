@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import './globals.css';
+import Script from 'next/script';
 
 export const metadata = {
   title: 'POSFER — POS móvil para ferias libres y pequeños negocios',
@@ -30,6 +31,20 @@ export default function RootLayout({
       <body>
         {children}
       </body>
+      
+      {/* Google Analytics */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-VFFM0NHGMY"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-VFFM0NHGMY');
+        `}
+      </Script>
     </html>
   );
 }
