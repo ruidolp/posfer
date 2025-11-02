@@ -13,7 +13,10 @@ import {
   MapPin,
   LogOut,
   X,
-  ChevronDown
+  ChevronDown,
+  ShoppingCart,
+  Calendar,
+  Box
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -23,7 +26,20 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const menuItems = [
+interface MenuItem {
+  label: string;
+  icon: any;
+  href?: string;
+  submenu?: SubMenuItem[];
+}
+
+interface SubMenuItem {
+  label: string;
+  icon: any;
+  href: string;
+}
+
+const menuItems: MenuItem[] = [
   {
     label: 'Inicio',
     icon: Home,
@@ -32,12 +48,23 @@ const menuItems = [
   {
     label: 'Ventas',
     icon: DollarSign,
-    href: '/dashboard/ventas',
-  },
-  {
-    label: 'Productos',
-    icon: Package,
-    href: '/dashboard/productos',
+    submenu: [
+      {
+        label: 'Nueva venta',
+        icon: ShoppingCart,
+        href: '/dashboard/ventas/nueva',
+      },
+      {
+        label: 'Productos en venta',
+        icon: Box,
+        href: '/dashboard/productos',
+      },
+      {
+        label: 'Historial',
+        icon: Calendar,
+        href: '/dashboard/ventas/historial',
+      },
+    ],
   },
   {
     label: 'Compras',
@@ -61,6 +88,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
   const handleLogout = async () => {
     try {
@@ -80,6 +108,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Auto-expandir menú si estamos en una de sus rutas
+  const isSubmenuActive = (submenu?: SubMenuItem[]) => {
+    if (!submenu) return false;
+    return submenu.some(item => pathname.startsWith(item.href));
   };
 
   return (
@@ -117,13 +151,66 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || 
-              (pathname.startsWith(item.href + '/') && item.href !== '/dashboard/ventas' && item.href !== '/dashboard');
+            const hasSubmenu = !!item.submenu;
+            const isExpanded = expandedMenu === item.label || isSubmenuActive(item.submenu);
+            const isActive = item.href === pathname;
 
+            if (hasSubmenu) {
+              return (
+                <div key={item.label}>
+                  {/* Item principal con submenú */}
+                  <button
+                    onClick={() => setExpandedMenu(isExpanded ? null : item.label)}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full',
+                      'min-h-touch text-base font-medium',
+                      'text-foreground hover:bg-secondary'
+                    )}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <ChevronDown className={cn(
+                      "w-4 h-4 transition-transform flex-shrink-0",
+                      isExpanded && "rotate-180"
+                    )} />
+                  </button>
+
+                  {/* Submenú */}
+                  {isExpanded && (
+                    <div className="ml-4 mt-1 space-y-1">
+                      {item.submenu!.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        const isSubActive = pathname === subItem.href;
+
+                        return (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={onClose}
+                            className={cn(
+                              'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors',
+                              'text-sm font-medium',
+                              isSubActive
+                                ? 'bg-primary text-primary-foreground'
+                                : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                            )}
+                          >
+                            <SubIcon className="w-4 h-4 flex-shrink-0" />
+                            <span>{subItem.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Item sin submenú
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={item.href!}
                 onClick={onClose}
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',

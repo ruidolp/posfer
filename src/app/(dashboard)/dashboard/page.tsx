@@ -12,12 +12,14 @@ import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import ThemeSwitcher from '@/components/common/ThemeSwitcher';
+import CloseCashModal from '@/components/cash/CloseCashModal';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [cashRegister, setCashRegister] = useState<any>(null);
   const [todaySales, setTodaySales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -50,8 +52,78 @@ export default function DashboardPage() {
   const totalSalesToday = todaySales.reduce((sum, sale) => sum + Number(sale.total), 0);
   const salesCount = todaySales.length;
 
+  // Calcular desglose de métodos de pago
+  const paymentBreakdown = {
+    cash: 0,
+    debit: 0,
+    credit: 0,
+    transfer: 0,
+  };
+
+  todaySales.forEach((sale) => {
+    if (sale.payments) {
+      sale.payments.forEach((payment: any) => {
+        const amount = Number(payment.amount);
+        switch (payment.payment_method) {
+          case 'cash':
+            paymentBreakdown.cash += amount;
+            break;
+          case 'debit':
+            paymentBreakdown.debit += amount;
+            break;
+          case 'credit':
+            paymentBreakdown.credit += amount;
+            break;
+          case 'transfer':
+            paymentBreakdown.transfer += amount;
+            break;
+        }
+      });
+    }
+  });
+
+  const handleCloseCash = async (notes?: string) => {
+    try {
+      const response = await fetch('/api/cash-register/close', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes }),
+      });
+
+      // Verificar si la respuesta es OK antes de parsear JSON
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        alert('Error al cerrar caja: ' + (errorText || 'Error desconocido'));
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCashRegister(null);
+        setTodaySales([]);
+        setShowCloseModal(false);
+        alert('Caja cerrada exitosamente');
+        await loadDashboardData(); // Recargar datos
+      } else {
+        alert(result.error || 'Error al cerrar caja');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al cerrar caja: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    }
+  };
+
+  const salesTodayData = {
+    totalSales: totalSalesToday,
+    paymentBreakdown,
+    salesCount,
+  };
+
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">
@@ -129,8 +201,8 @@ export default function DashboardPage() {
               Nueva Venta
             </Link>
 
-            <Link
-              href="/dashboard/caja/cerrar"
+            <button
+              onClick={() => setShowCloseModal(true)}
               className={cn(
                 'px-6 py-3 rounded-lg',
                 'min-h-touch text-base font-semibold',
@@ -139,7 +211,7 @@ export default function DashboardPage() {
               )}
             >
               Cerrar Caja
-            </Link>
+            </button>
           </div>
         </div>
       ) : (
@@ -209,6 +281,17 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Modal Cerrar Caja */}
+      {showCloseModal && cashRegister && (
+        <CloseCashModal
+          cashRegister={cashRegister}
+          salesToday={salesTodayData}
+          onClose={() => setShowCloseModal(false)}
+          onCloseCash={handleCloseCash}
+        />
+      )}
+    </>
   );
 }

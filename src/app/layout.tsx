@@ -1,6 +1,11 @@
 // src/app/layout.tsx
 import './globals.css';
 
+export const metadata = {
+  title: 'POSFER — POS móvil para ferias libres y pequeños negocios',
+  description: 'Controla tu negocio desde tu celular. Construido especialmente para comerciantes minoristas y trabajadores independientes. Fácil de usar, sin complicaciones. Prueba gratis 14 días.',
+};
+
 export default function RootLayout({
   children,
 }: {
