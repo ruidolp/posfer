@@ -35,6 +35,7 @@ const UNIT_TYPES = [
   { value: 'kg', label: 'Kilogramo' },
   { value: 'unidad', label: 'Unidad' },
   { value: 'atado', label: 'Atado' },
+  { value: 'bandeja', label: 'Bandeja' },
 ];
 
 export default function AddProductModal({ onClose, onAdd }: AddProductModalProps) {

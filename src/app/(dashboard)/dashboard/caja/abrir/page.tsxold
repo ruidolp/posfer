@@ -3,15 +3,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DollarSign, MapPin, Plus, ChevronDown } from 'lucide-react';
+import { DollarSign, MapPin } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
-import CreateLocationInline from '@/components/locations/CreateLocationInline';
 
 export default function AbrirCajaPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState<any[]>([]);
-  const [showCreateLocation, setShowCreateLocation] = useState(false);
   const [formData, setFormData] = useState({
     openingAmount: '',
     locationId: '',
@@ -134,54 +132,30 @@ export default function AbrirCajaPage() {
         </div>
 
         {/* Ubicación */}
-        <div className="bg-card border-2 border-border rounded-xl p-6">
-          <label className="block text-lg font-semibold mb-4 flex items-center gap-2">
-            <MapPin className="w-6 h-6" />
-            Ubicación (Opcional)
-          </label>
-
-          {showCreateLocation ? (
-            <CreateLocationInline
-              onCreated={(id) => {
-                setFormData({ ...formData, locationId: id });
-                setShowCreateLocation(false);
-                loadLocations();
-              }}
-              onCancel={() => setShowCreateLocation(false)}
-            />
-          ) : (
-            <>
-              <div className="relative mb-3">
-                <select
-                  value={formData.locationId}
-                  onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
-                  className={cn(
-                    'w-full px-4 py-3 pr-10 rounded-lg border-2 border-input',
-                    'bg-background text-foreground text-base font-medium',
-                    'focus:outline-none focus:border-primary appearance-none'
-                  )}
-                >
-                  <option value="">Sin ubicación</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowCreateLocation(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border-2 border-dashed border-primary text-primary hover:bg-primary/5 font-medium transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                Crear nueva ubicación
-              </button>
-            </>
-          )}
-        </div>
+        {locations.length > 0 && (
+          <div className="bg-card border-2 border-border rounded-xl p-6">
+            <label className="block text-lg font-semibold mb-4 flex items-center gap-2">
+              <MapPin className="w-6 h-6" />
+              Ubicación (Opcional)
+            </label>
+            <select
+              value={formData.locationId}
+              onChange={(e) => setFormData({ ...formData, locationId: e.target.value })}
+              className={cn(
+                'w-full px-4 py-3 rounded-lg border-2 border-input',
+                'bg-background text-foreground text-base',
+                'focus:outline-none focus:border-primary'
+              )}
+            >
+              <option value="">Sin ubicación</option>
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Notas */}
         <div className="bg-card border-2 border-border rounded-xl p-6">

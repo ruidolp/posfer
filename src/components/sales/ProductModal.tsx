@@ -32,8 +32,8 @@ interface ProductModalProps {
     isSpecialPrice: boolean;
     specialPriceReason?: string;
     packageLabel?: string;
-    packageQuantity?: number;  // ← NUEVO
-    packageCount?: number;      // ← NUEVO
+    packageQuantity?: number;
+    packageCount?: number;
   }) => void;
 }
 
@@ -135,13 +135,13 @@ export default function ProductModal({
     const pkg = getPackageData();
 
     onConfirm({
-      quantity: totalQty,  // Total de unidades
+      quantity: totalQty,
       unitPrice: unitPrice,
       isSpecialPrice: mode === 'package',
       specialPriceReason: mode === 'package' ? 'Paquete' : undefined,
       packageLabel: getPackageLabel(),
-      packageQuantity: mode === 'package' && pkg ? pkg.quantity : undefined,  // Unidades por paquete
-      packageCount: mode === 'package' ? quantity : undefined,  // Cantidad de paquetes
+      packageQuantity: mode === 'package' && pkg ? pkg.quantity : undefined,
+      packageCount: mode === 'package' ? quantity : undefined,
     });
 
     onClose();
@@ -225,11 +225,11 @@ export default function ProductModal({
                   ))}
                 </div>
 
-                {/* Input custom */}
+                {/* Input custom - CORREGIDO PARA MOBILE */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setQuantity(Math.max(0.1, quantity - 1))}
-                    className="w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
+                    className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
                   >
                     -
                   </button>
@@ -239,11 +239,11 @@ export default function ProductModal({
                     onChange={(e) => setQuantity(Math.max(0.1, parseFloat(e.target.value) || 0))}
                     step="0.1"
                     min="0.1"
-                    className="flex-1 text-center text-2xl font-bold px-3 py-3 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 min-w-0 text-center text-2xl font-bold px-3 py-3 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
+                    className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
                   >
                     +
                   </button>
@@ -298,7 +298,7 @@ export default function ProductModal({
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
+                      className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
                     >
                       -
                     </button>
@@ -307,11 +307,11 @@ export default function ProductModal({
                       value={quantity}
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                       min="1"
-                      className="flex-1 text-center text-2xl font-bold px-3 py-3 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="flex-1 min-w-0 text-center text-2xl font-bold px-3 py-3 rounded-lg border-2 border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                     <button
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
+                      className="flex-shrink-0 w-12 h-12 rounded-lg bg-secondary hover:bg-secondary/80 flex items-center justify-center font-bold text-xl transition-colors"
                     >
                       +
                     </button>

@@ -59,26 +59,27 @@ export default function HomePage() {
             Sin computador ni papeles
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black leading-[1.1] tracking-tight mb-8">
+         <h1 className="text-5xl md:text-7xl font-black leading-[1.1] tracking-tight mb-8">
             <span className="bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">Controla tu negocio</span><br/>
             desde tu celular
           </h1>
           
-          {/* Subtítulo estilizado con fondo */}
+
           <div className="relative max-w-3xl mx-auto mb-10">
-            {/* Glow sutil */}
+         
             <div className="absolute inset-0 bg-amber-400/10 blur-2xl"></div>
             
-            {/* Card elegante */}
+     
             <div className="relative backdrop-blur-sm bg-gradient-to-r from-amber-50/80 to-amber-100/80 border border-amber-200/60 rounded-2xl px-6 md:px-10 py-5 shadow-lg">
               <p className="text-base md:text-lg text-black/70 font-medium leading-relaxed text-center">
-                Sistema de ventas desarrollado para
+                Sistema de ventas CREADO para
               </p>
               <p className="text-xl md:text-2xl text-amber-800 font-bold text-center mt-1">
-                comerciantes minoristas y trabajadores independientes
+                Comerciantes Minoristas y Trabajadores Independientes
               </p>
             </div>
           </div>
+  
 
           <p className="text-base md:text-lg text-black/60 font-medium max-w-2xl mx-auto mb-10">
             Fácil de usar, sin complicaciones ni mensualidades caras

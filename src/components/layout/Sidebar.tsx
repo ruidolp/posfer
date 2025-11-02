@@ -16,7 +16,8 @@ import {
   ChevronDown,
   ShoppingCart,
   Calendar,
-  Box
+  Box,
+  Plus
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -69,7 +70,18 @@ const menuItems: MenuItem[] = [
   {
     label: 'Compras',
     icon: ShoppingBag,
-    href: '/dashboard/compras',
+    submenu: [
+      {
+        label: 'Nueva compra',
+        icon: Plus,
+        href: '/dashboard/compras/nueva',
+      },
+      {
+        label: 'Historial',
+        icon: Calendar,
+        href: '/dashboard/compras',
+      },
+    ],
   },
   {
     label: 'Proveedores',

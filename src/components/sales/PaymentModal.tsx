@@ -36,15 +36,15 @@ export default function PaymentModal({
   };
 
   const handleCardPayment = () => {
-    if (selectedCard === 'transfer' && !reference.trim()) {
-      alert('Ingresa el número de transferencia');
-      return;
-    }
+    // ✅ CORRECCIÓN: Si es transferencia y no hay referencia, generar una automática
+    const finalReference = selectedCard === 'transfer' && !reference.trim()
+      ? `TRANS-${Date.now()}`
+      : reference.trim();
 
     const payment: Payment = {
       paymentMethod: selectedCard,
       amount: total,
-      reference: reference.trim() || undefined,
+      reference: finalReference || undefined,
     };
     onComplete([payment]);
   };
@@ -135,7 +135,7 @@ export default function PaymentModal({
                 {selectedCard === 'transfer' && (
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Número de transferencia:
+                      Número de transferencia (opcional):
                     </label>
                     <input
                       type="text"
