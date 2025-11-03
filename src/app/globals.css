@@ -4,97 +4,112 @@
 @tailwind utilities;
 
 /* ============================================ */
-/* TEMA: ALTO CONTRASTE (Default) */
+/* TEMA 1: HIGH CONTRAST (Optimizado) */
+/* Negro + Blanco + Grises suaves */
 /* ============================================ */
 [data-theme="high_contrast"] {
   --background: 0 0% 100%;
-  --foreground: 0 0% 0%;
+  --foreground: 0 0% 3%;
   --card: 0 0% 100%;
-  --card-foreground: 0 0% 0%;
-  --primary: 0 0% 0%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 95%;
-  --secondary-foreground: 0 0% 0%;
-  --accent: 0 0% 10%;
-  --accent-foreground: 0 0% 100%;
+  --card-foreground: 0 0% 3%;
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 9%;
+  --accent: 0 0% 15%;
+  --accent-foreground: 0 0% 98%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 20%;
-  --input: 0 0% 90%;
-  --ring: 0 0% 0%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 45%;
+  --border: 0 0% 15%;
+  --input: 0 0% 92%;
+  --ring: 0 0% 9%;
+  --muted: 0 0% 97%;
+  --muted-foreground: 0 0% 46%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 3%;
 }
 
 /* ============================================ */
-/* TEMA: DÍA SOLEADO */
+/* TEMA 2: SUNNY DAY → Ocean Blue (Modernizado) */
+/* Azul océano profesional */
 /* ============================================ */
 [data-theme="sunny_day"] {
-  --background: 210 100% 97%;
-  --foreground: 220 90% 10%;
+  --background: 216 33% 97%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 220 90% 10%;
-  --primary: 220 90% 25%;
+  --card-foreground: 222 47% 11%;
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 45 100% 60%;
-  --secondary-foreground: 220 90% 10%;
-  --accent: 45 100% 50%;
-  --accent-foreground: 220 90% 10%;
+  --secondary: 214 32% 91%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 50% 70%;
-  --input: 210 50% 95%;
-  --ring: 220 90% 25%;
-  --muted: 210 50% 95%;
-  --muted-foreground: 220 50% 40%;
+  --border: 214 32% 82%;
+  --input: 214 25% 94%;
+  --ring: 221 83% 53%;
+  --muted: 214 25% 94%;
+  --muted-foreground: 215 20% 45%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
 }
 
 /* ============================================ */
-/* TEMA: NUBLADO */
+/* TEMA 3: CLOUDY → Mint Fresh (Modernizado) */
+/* Verde menta profesional */
 /* ============================================ */
 [data-theme="cloudy"] {
-  --background: 200 10% 95%;
-  --foreground: 200 30% 10%;
+  --background: 150 15% 97%;
+  --foreground: 150 25% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 200 30% 10%;
-  --primary: 150 50% 35%;
+  --card-foreground: 150 25% 10%;
+  --primary: 160 84% 39%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 200 20% 80%;
-  --secondary-foreground: 200 30% 10%;
-  --accent: 150 40% 50%;
+  --secondary: 155 30% 88%;
+  --secondary-foreground: 150 25% 10%;
+  --accent: 165 82% 51%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 200 20% 70%;
-  --input: 200 15% 90%;
-  --ring: 150 50% 35%;
-  --muted: 200 15% 90%;
-  --muted-foreground: 200 30% 40%;
+  --border: 155 20% 82%;
+  --input: 155 18% 94%;
+  --ring: 160 84% 39%;
+  --muted: 155 18% 94%;
+  --muted-foreground: 155 15% 42%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 150 25% 10%;
 }
 
 /* ============================================ */
-/* TEMA: ATARDECER */
+/* TEMA 4: SUNSET (Optimizado) */
+/* Naranja vibrante + Terracota */
 /* ============================================ */
 [data-theme="sunset"] {
-  --background: 30 30% 95%;
-  --foreground: 25 50% 15%;
-  --card: 30 40% 98%;
-  --card-foreground: 25 50% 15%;
-  --primary: 20 70% 45%;
+  --background: 30 25% 97%;
+  --foreground: 15 45% 12%;
+  --card: 30 30% 99%;
+  --card-foreground: 15 45% 12%;
+  --primary: 18 85% 50%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 30 60% 70%;
-  --secondary-foreground: 25 50% 15%;
-  --accent: 10 80% 55%;
+  --secondary: 28 65% 88%;
+  --secondary-foreground: 15 45% 12%;
+  --accent: 12 88% 58%;
   --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 30 30% 75%;
-  --input: 30 25% 92%;
-  --ring: 20 70% 45%;
-  --muted: 30 25% 92%;
-  --muted-foreground: 25 50% 40%;
+  --border: 30 25% 82%;
+  --input: 30 20% 94%;
+  --ring: 18 85% 50%;
+  --muted: 30 20% 94%;
+  --muted-foreground: 20 30% 42%;
+  --popover: 30 30% 99%;
+  --popover-foreground: 15 45% 12%;
 }
 
+/* ============================================ */
+/* BASE STYLES */
+/* ============================================ */
 @layer base {
   * {
     @apply border-border;
@@ -102,6 +117,8 @@
   
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01';
+    font-optical-sizing: auto;
   }
 
   /* Touch optimizations */
@@ -112,8 +129,18 @@
   textarea {
     @apply touch-manipulation;
   }
+
+  /* Mejoras de legibilidad */
+  input,
+  textarea,
+  select {
+    @apply placeholder:text-muted-foreground/60;
+  }
 }
 
+/* ============================================ */
+/* UTILITIES */
+/* ============================================ */
 @layer utilities {
   /* Tamaño mínimo táctil (44px x 44px según HIG de Apple y Material Design) */
   .min-h-touch {
@@ -124,7 +151,7 @@
     min-width: 44px;
   }
 
-  /* Animaciones para landing */
+  /* Animaciones suaves */
   @keyframes fade-in-up {
     from {
       opacity: 0;
@@ -138,5 +165,10 @@
 
   .animate-fade-in-up {
     animation: fade-in-up 0.6s ease-out both;
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

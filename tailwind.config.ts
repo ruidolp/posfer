@@ -10,6 +10,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,20 +49,23 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "12px",
+        md: "10px",
+        sm: "8px",
+        xl: "16px",
+        "2xl": "20px",
+        "3xl": "24px",
       },
       fontSize: {
         // Tamaños optimizados para móvil y legibilidad exterior
-        'xs': ['0.75rem', { lineHeight: '1rem' }],
-        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
-        'base': ['1rem', { lineHeight: '1.5rem' }],
-        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
-        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
-        '2xl': ['1.5rem', { lineHeight: '2rem' }],
-        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        'xs': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+        'base': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem', fontWeight: '500' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem', fontWeight: '500' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem', fontWeight: '600' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem', fontWeight: '600' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem', fontWeight: '700' }],
       },
       spacing: {
         // Espaciados optimizados para touch (mínimo 44px)
@@ -73,6 +79,11 @@ const config: Config = {
       minWidth: {
         'touch': '44px',
         'touch-lg': '56px',
+      },
+      boxShadow: {
+        'soft': '0 2px 8px rgba(0, 0, 0, 0.04)',
+        'medium': '0 4px 16px rgba(0, 0, 0, 0.08)',
+        'strong': '0 8px 24px rgba(0, 0, 0, 0.12)',
       },
     },
   },

@@ -1,6 +1,14 @@
 // src/app/layout.tsx
 import './globals.css';
 import Script from 'next/script';
+import { Poppins } from 'next/font/google';
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-poppins',
+});
 
 export const metadata = {
   title: 'POSFER — POS móvil para ferias libres y pequeños negocios',
@@ -13,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={poppins.variable}>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -28,7 +36,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>
+      <body className={poppins.className}>
         {children}
       </body>
       
